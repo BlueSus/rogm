@@ -2,65 +2,61 @@ package com.game.rogm;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.game.rogm.characters.PlayerCharacter;
+import com.game.rogm.level.Platform;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main extends ApplicationAdapter {
     private OrthographicCamera camera;
-    private ShapeRenderer shapeRenderer;
-    private float playerX, playerY;
-    private float moveSpeed = 200f; // pixels per second
+    private ShapeRenderer renderer;
+    private PlayerCharacter player;
+    private static List<Platform> platforms;
 
     @Override
     public void create() {
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 600);
+        renderer = new ShapeRenderer();
 
-        shapeRenderer = new ShapeRenderer();
-
-        // Start player in center
-        playerX = 400;
-        playerY = 300;
+        player = new PlayerCharacter(100, 300);
+        platforms = new ArrayList<>();
+        platforms.add(new Platform(0, 100, 800, 30)); // floor
+        platforms.add(new Platform(300, 200, 150, 20)); // floating
     }
 
     @Override
     public void render() {
-        // Clear screen
+        float delta = Gdx.graphics.getDeltaTime();
+
+        player.update(delta);
+        player.checkCollision(platforms);
+
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         camera.update();
-        shapeRenderer.setProjectionMatrix(camera.combined);
+        renderer.setProjectionMatrix(camera.combined);
 
-        handleInput(Gdx.graphics.getDeltaTime());
-
-        // Draw player
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(0, 1, 0, 1); // green
-        shapeRenderer.rect(playerX, playerY, 32, 32);
-        shapeRenderer.end();
-    }
-
-    private void handleInput(float delta) {
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-            playerY += moveSpeed * delta;
+        renderer.begin(ShapeRenderer.ShapeType.Filled);
+        player.render(renderer);
+        for (Platform platform : platforms) {
+            platform.render(renderer);
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-            playerY -= moveSpeed * delta;
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-            playerX -= moveSpeed * delta;
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-            playerX += moveSpeed * delta;
-        }
+        renderer.end();
     }
 
     @Override
     public void dispose() {
-        shapeRenderer.dispose();
+        renderer.dispose();
     }
+
+    public static List<Platform> getPlatforms() {
+        return platforms;
+    }
+
 }
